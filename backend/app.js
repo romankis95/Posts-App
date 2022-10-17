@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const app = express();
 const Post = require("./models/post");
+const postRoutes = require("./routes/posts");
 
 
 
@@ -30,50 +31,11 @@ app.use((req, res, next) => {
   );
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, DELETE, OPTIONS"
+    "GET, POST,PUT, PATCH, DELETE, OPTIONS"
   );
   next();
 });
 
-app.post("/api/posts", (req, res, next) => {
-  const post = req.body;
-
-  var newPost = new Post({
-    title: post.title,
-    content: post.content
-  });
-  newPost.save(function (err, post) {
-    if (err) return console.error(err);
-    res.status(201).json({
-      message: "Post added successfully",
-      createdId: post._id
-    });
-  });
-
- 
-});
-
-app.delete("/api/posts/:id", async (req, res, next) => {
-  console.log(req.params.id);
-  var deletato = await Post.deleteOne({
-    _id: req.params.id
-  }).lean().exec();
-  res.status(200).json({
-    message: "Post deleted!"
-  });
-
-
-});
-
-app.use("/api/posts", async (req, res, next) => {
-   var posts = await Post.find().lean().exec();
-
-  res.status(200).json({
-    message: 'Posts fetched successfully',
-    posts: posts
-  });
-});
-
-
+app.use("/api/posts",postRoutes);
 
 module.exports = app;
