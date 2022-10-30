@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const app = express();
 const Post = require("./models/post");
 const postRoutes = require("./routes/posts");
-
+const multer = require("multer");
 
 
 app.use(bodyParser.json());
@@ -35,6 +35,7 @@ app.use((req, res, next) => {
   );
   next();
 });
+
 
 app.use("/api/posts",postRoutes);
 
