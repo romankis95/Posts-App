@@ -1,26 +1,11 @@
-import {
-  Component,
-  OnInit
-} from "@angular/core";
-import {
-  FormControl,
-  FormGroup,
-  NgForm,
-  Validators
-} from "@angular/forms";
-//
-import {
-  ActivatedRoute,
-  ParamMap
-} from "@angular/router";
-import {
-  Post
-} from '../post.model';
-import {
-  PostsService
-} from "../posts.service";
+import { Component, OnInit } from "@angular/core";
+import { FormGroup, FormControl, Validators } from "@angular/forms";
+import { ActivatedRoute, ParamMap } from "@angular/router";
 
-import {   MimeType } from "./mime-type.validator";
+import { PostsService } from "../posts.service";
+import { Post } from "../post.model";
+import { mimeType } from "./mime-type.validator";
+
 @Component({
   selector: "app-post-create",
   templateUrl: "./post-create.component.html",
@@ -30,42 +15,46 @@ export class PostCreateComponent implements OnInit {
   enteredTitle = "";
   enteredContent = "";
   post: Post;
+  isLoading = false;
   form: FormGroup;
-  isLoading = false; // bool var to determine if we are are loading data, or not
+  imagePreview: string;
   private mode = "create";
   private postId: string;
-  imagePreview: string;
-  constructor(public postsService: PostsService, public route: ActivatedRoute) {}
+
+  constructor(
+    public postsService: PostsService,
+    public route: ActivatedRoute
+  ) {}
 
   ngOnInit() {
     this.form = new FormGroup({
-      'title': new FormControl(null, {
+      title: new FormControl(null, {
         validators: [Validators.required, Validators.minLength(3)]
       }),
-      'content': new FormControl(null, {
-        validators: [Validators.required]
-      }),
-      'image': new FormControl(null, {
-        validators: [Validators.required, ], asyncValidators: [MimeType],
+      content: new FormControl(null, { validators: [Validators.required] }),
+      image: new FormControl(null, {
+        validators: [Validators.required],
+        asyncValidators: [mimeType]
       })
     });
-
     this.route.paramMap.subscribe((paramMap: ParamMap) => {
-      if (paramMap.has("postId")) {   // if we have a postId in the URL
-        this.mode = "edit";          // we are in edit mode
-        this.postId = paramMap.get("postId"); // get the postId from the URL
-        this.isLoading = true;      // set isLoading to true
-        this.postsService.getPost(this.postId).subscribe(postData => { // get the post data from the server
-          this.isLoading = false;  // set isLoading to false
+      if (paramMap.has("postId")) {
+        this.mode = "edit";
+        this.postId = paramMap.get("postId");
+        this.isLoading = true;
+        this.postsService.getPost(this.postId).subscribe(postData => {
+          this.isLoading = false;
           this.post = {
             id: postData._id,
             title: postData.title,
-            content: postData.content
+            content: postData.content,
+            imagePath: postData.imagePath
           };
-        });
-        this.form.setValue({
-          title: this.post.title,
-          content: this.post.content
+          this.form.setValue({
+            title: this.post.title,
+            content: this.post.content,
+            image: this.post.imagePath
+          });
         });
       } else {
         this.mode = "create";
@@ -74,18 +63,15 @@ export class PostCreateComponent implements OnInit {
     });
   }
 
-
   onImagePicked(event: Event) {
     const file = (event.target as HTMLInputElement).files[0];
-    this.form.patchValue({
-      image: file
-    }); // patchValue() is used to update a single value in a form
-    this.form.get('image').updateValueAndValidity(); // updateValueAndValidity() is used to update the validity of a single form control
+    this.form.patchValue({ image: file });
+    this.form.get("image").updateValueAndValidity();
     const reader = new FileReader();
-    reader.onload = () => { // onload is an event that is triggered when the reader has finished reading the file
-      this.imagePreview = reader.result as string; // reader.result is the data URL of the file
+    reader.onload = () => {
+      this.imagePreview = reader.result as string;
     };
-    reader.readAsDataURL(file); // readAsDataURL() is used to read the contents of the specified Blob or File
+    reader.readAsDataURL(file);
   }
 
   onSavePost() {
@@ -94,9 +80,18 @@ export class PostCreateComponent implements OnInit {
     }
     this.isLoading = true;
     if (this.mode === "create") {
-      this.postsService.addPost(this.form.value.title, this.form.value.content, this.form.value.image);
+      this.postsService.addPost(
+        this.form.value.title,
+        this.form.value.content,
+        this.form.value.image
+      );
     } else {
-      this.postsService.updatePost(this.postId, this.form.value.title, this.form.value.content);
+      this.postsService.updatePost(
+        this.postId,
+        this.form.value.title,
+        this.form.value.content,
+        this.form.value.image
+      );
     }
     this.form.reset();
   }
