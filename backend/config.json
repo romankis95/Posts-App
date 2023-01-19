@@ -1,0 +1,12 @@
+{
+  "server": {
+    "port": 80
+
+},
+  "database": {
+    "host": "mongodb://localhost/",
+    "name": "test",
+    "user": "",
+    "password": ""
+  }
+}
